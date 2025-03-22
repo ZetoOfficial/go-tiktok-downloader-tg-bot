@@ -9,6 +9,13 @@ type DownloadResponse struct {
 	Photos   map[string][]byte // для zip-архива – распакованные фотографии
 }
 
+type APIError struct {
+	Code    int               `json:"code"`
+	Message string            `json:"message"`
+	Router  string            `json:"router,omitempty"`
+	Params  map[string]string `json:"params,omitempty"`
+}
+
 // DownloadOption представляет возможные параметры для загрузки.
 type DownloadOption struct {
 	Key   string

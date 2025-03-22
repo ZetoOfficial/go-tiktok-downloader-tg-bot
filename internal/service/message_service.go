@@ -9,9 +9,9 @@ import (
 )
 
 type TelegramSender interface {
-	SendMessage(chatID int64, text string) error
-	SendVideoFile(chatID int64, fileName string, data []byte) error
-	SendMediaGroup(chatID int64, media []models.MediaInput) error
+	SendMessage(chatID int64, text string, opts ...models.SendOption) error
+	SendVideoFile(chatID int64, fileName string, data []byte, opts ...models.SendOption) error
+	SendMediaGroup(chatID int64, media []models.MediaInput, opts ...models.SendOption) error
 }
 
 type MessageService struct {
@@ -22,9 +22,9 @@ func NewMessageService(sender TelegramSender) *MessageService {
 	return &MessageService{sender: sender}
 }
 
-func (ms *MessageService) SendMedia(ctx context.Context, chatID int64, media *models.Media) error {
+func (ms *MessageService) SendMedia(ctx context.Context, chatID int64, media *models.Media, opts ...models.SendOption) error {
 	if len(media.VideoData) > 0 {
-		return ms.sender.SendVideoFile(chatID, media.VideoName, media.VideoData)
+		return ms.sender.SendVideoFile(chatID, media.VideoName, media.VideoData, opts...)
 	}
 
 	// Отправка изображений, если они есть
@@ -65,7 +65,7 @@ func (ms *MessageService) SendMedia(ctx context.Context, chatID int64, media *mo
 				}
 				inputs = append(inputs, input)
 			}
-			if err := ms.sender.SendMediaGroup(chatID, inputs); err != nil {
+			if err := ms.sender.SendMediaGroup(chatID, inputs, opts...); err != nil {
 				return err
 			}
 		}

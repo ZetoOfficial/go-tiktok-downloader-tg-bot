@@ -1,8 +1,22 @@
 package bot
 
-import tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+import (
+	"log"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+)
 
 func handleCommand(botAPI *tgbotapi.BotAPI, message *tgbotapi.Message) {
+	commands := []tgbotapi.BotCommand{
+		{Command: "start", Description: "Запустить бота"},
+		{Command: "help", Description: "Справка по командам"},
+	}
+
+	_, err := botAPI.Request(tgbotapi.NewSetMyCommands(commands...))
+	if err != nil {
+		log.Fatalf("Ошибка при установке команд: %v", err)
+	}
+
 	chatID := message.Chat.ID
 	switch message.Command() {
 	case "start":

@@ -15,26 +15,41 @@ func NewTelegramAdapter(bot *tgbotapi.BotAPI) *TelegramAdapter {
 	return &TelegramAdapter{Bot: bot}
 }
 
-func (ta *TelegramAdapter) SendMessage(chatID int64, text string) error {
+func (ta *TelegramAdapter) SendMessage(chatID int64, text string, opts ...models.SendOption) error {
+	options := ta.applyOptions(opts)
+
 	msg := tgbotapi.NewMessage(chatID, text)
+	if options.ReplyToMessageID > 0 {
+		msg.ReplyToMessageID = options.ReplyToMessageID
+	}
+
 	_, err := ta.Bot.Send(msg)
 	return err
 }
 
-func (ta *TelegramAdapter) SendVideoFile(chatID int64, fileName string, data []byte) error {
+func (ta *TelegramAdapter) SendVideoFile(chatID int64, fileName string, data []byte, opts ...models.SendOption) error {
+	options := ta.applyOptions(opts)
+
 	videoFile := tgbotapi.FileBytes{
 		Name:  fileName,
 		Bytes: data,
 	}
 	videoMsg := tgbotapi.NewVideo(chatID, videoFile)
+
+	if options.ReplyToMessageID > 0 {
+		videoMsg.ReplyToMessageID = options.ReplyToMessageID
+	}
+
 	_, err := ta.Bot.Send(videoMsg)
 	return err
 }
 
-func (ta *TelegramAdapter) SendMediaGroup(chatID int64, media []models.MediaInput) error {
+func (ta *TelegramAdapter) SendMediaGroup(chatID int64, media []models.MediaInput, opts ...models.SendOption) error {
 	if len(media) == 0 {
 		return nil
 	}
+
+	options := ta.applyOptions(opts)
 
 	var mediaGroup []interface{}
 	for _, m := range media {
@@ -49,7 +64,6 @@ func (ta *TelegramAdapter) SendMediaGroup(chatID int64, media []models.MediaInpu
 
 		inputMedia := tgbotapi.NewInputMediaPhoto(file)
 		inputMedia.Caption = m.Caption
-
 		mediaGroup = append(mediaGroup, inputMedia)
 	}
 
@@ -58,10 +72,19 @@ func (ta *TelegramAdapter) SendMediaGroup(chatID int64, media []models.MediaInpu
 	}
 
 	config := tgbotapi.MediaGroupConfig{
-		ChatID: chatID,
-		Media:  mediaGroup,
+		ChatID:           chatID,
+		Media:            mediaGroup,
+		ReplyToMessageID: options.ReplyToMessageID,
 	}
 
 	_, err := ta.Bot.SendMediaGroup(config)
 	return err
+}
+
+func (ta *TelegramAdapter) applyOptions(opts []models.SendOption) models.SendOptions {
+	options := models.SendOptions{}
+	for _, opt := range opts {
+		opt(&options)
+	}
+	return options
 }
