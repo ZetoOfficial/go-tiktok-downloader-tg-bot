@@ -31,6 +31,8 @@ func NewDouyinClient(cfg *config.Config) (*DouyinClient, error) {
 		SetTimeout(30 * time.Second).
 		SetRetryCount(3)
 
+	log.Printf("Douyin API URL: %s", parsedURL.String())
+
 	return &DouyinClient{
 		client: client,
 		apiURL: parsedURL,
@@ -53,6 +55,8 @@ func (c *DouyinClient) Download(ctx context.Context, link string, options ...mod
 		SetContext(ctx).
 		SetQueryParams(params).
 		Get("/download")
+
+	log.Printf("Request URL: %s", resp.Request.URL)
 	if err != nil {
 		return nil, fmt.Errorf("request error: %w", err)
 	}

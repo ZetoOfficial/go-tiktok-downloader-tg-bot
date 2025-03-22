@@ -1,2 +1,2 @@
 bot_token: ""
-douyin_api: "http://douyin-api:80"
+douyin_api: "http://douyin-api:80/api/"
