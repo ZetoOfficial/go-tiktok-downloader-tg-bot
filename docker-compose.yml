@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  tiktok-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - douyin-api
+    restart: unless-stopped
+
+  douyin-api:
+    image: evil0ctal/douyin_tiktok_download_api:latest
+    restart: unless-stopped

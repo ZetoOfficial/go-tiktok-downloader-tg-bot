@@ -1,12 +1,11 @@
 package clients
 
 import (
-	"archive/zip"
-	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
-	"io"
 	"log"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
@@ -38,53 +37,71 @@ func NewDouyinClient(cfg *config.Config) (*DouyinClient, error) {
 	}, nil
 }
 
-// Download осуществляет запрос к эндпоинту /download с дополнительными параметрами.
-// Если ответ представляет zip-архив, он распаковывается и извлекаются фотографии.
 func (c *DouyinClient) Download(ctx context.Context, link string, options ...models.DownloadOption) (*models.DownloadResponse, error) {
 	if link == "" {
 		return nil, fmt.Errorf("empty link")
 	}
-
 	params := map[string]string{
 		"url":            link,
 		"prefix":         "false",
-		"with_watermark": "true",
+		"with_watermark": "false",
 	}
-
 	for _, opt := range options {
 		params[opt.Key] = fmt.Sprintf("%t", opt.Value)
 	}
-
-	startTime := time.Now()
-
 	resp, err := c.client.R().
 		SetContext(ctx).
 		SetQueryParams(params).
 		Get("/download")
-
-	duration := time.Since(startTime) // Вычисляем длительность запроса
-	log.Printf("Download request completed in %v", duration)
-
 	if err != nil {
-		return nil, fmt.Errorf("download: %w", err)
+		return nil, fmt.Errorf("request error: %w", err)
 	}
-
+	if resp == nil {
+		return nil, fmt.Errorf("empty response from server")
+	}
 	if resp.IsError() {
-		return nil, fmt.Errorf("api: %s", resp.Status())
+		return nil, fmt.Errorf("api error: %s - %s", resp.Status(), string(resp.Body()))
+	}
+	if resp.StatusCode() != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d - %s", resp.StatusCode(), string(resp.Body()))
 	}
 
-	// Попытка извлечь имя файла из заголовка Content-Disposition.
+	contentType := resp.Header().Get("Content-Type")
+	body := resp.Body()
+	if len(body) == 0 {
+		return nil, fmt.Errorf("empty response body")
+	}
+
 	filename := extractFileName(resp.Header().Get("Content-Disposition"))
 	if filename == "" {
 		filename = "downloaded_file"
 	}
 
-	// Если сервер возвращает zip-архив (определяем по заголовку или расширению файла)
-	contentType := resp.Header().Get("Content-Type")
+	contentLength := resp.Header().Get("Content-Length")
+	if contentLength != "" {
+		expectedSize, parseErr := parseContentLength(contentLength)
+		if parseErr != nil {
+			log.Printf("Warning: failed to parse Content-Length: %v", parseErr)
+		} else if len(body) < expectedSize {
+			return nil, fmt.Errorf("incomplete download: expected %d bytes, got %d", expectedSize, len(body))
+		}
+	}
+
+	if contentType == "application/json" {
+		var apiErr models.APIError
+		if err := json.Unmarshal(body, &apiErr); err != nil {
+			return nil, fmt.Errorf("invalid JSON error response: %w", err)
+		}
+		return nil, fmt.Errorf("server error: %s", apiErr.Message)
+	}
+
 	if contentType == "application/zip" || strings.HasSuffix(filename, ".zip") {
-		photos, err := extractPhotosFromZip(resp.Body())
+		photos, err := extractPhotosFromZip(body)
 		if err != nil {
 			return nil, fmt.Errorf("extract zip: %w", err)
+		}
+		if len(photos) == 0 {
+			return nil, fmt.Errorf("zip contains no image files")
 		}
 		return &models.DownloadResponse{
 			FileName: filename,
@@ -92,56 +109,8 @@ func (c *DouyinClient) Download(ctx context.Context, link string, options ...mod
 		}, nil
 	}
 
-	// Иначе возвращаем обычный файл (например, видео)
 	return &models.DownloadResponse{
 		FileName: filename,
-		Data:     resp.Body(),
+		Data:     body,
 	}, nil
-}
-
-// extractFileName пытается извлечь имя файла из заголовка Content-Disposition.
-func extractFileName(cd string) string {
-	if cd == "" {
-		return ""
-	}
-	// Ожидаемый формат: attachment; filename="file.mp4"
-	parts := strings.Split(cd, "filename=")
-	if len(parts) < 2 {
-		return ""
-	}
-	return strings.Trim(parts[1], `"`)
-}
-
-// extractPhotosFromZip распаковывает zip-архив и возвращает все файлы с изображениями.
-func extractPhotosFromZip(data []byte) (map[string][]byte, error) {
-	photos := make(map[string][]byte)
-	reader, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
-	if err != nil {
-		return nil, err
-	}
-	for _, file := range reader.File {
-		// Пропускаем директории
-		if file.FileInfo().IsDir() {
-			continue
-		}
-		// Обрабатываем только файлы с расширениями изображений
-		lowerName := strings.ToLower(file.Name)
-		if strings.HasSuffix(lowerName, ".jpg") ||
-			strings.HasSuffix(lowerName, ".jpeg") ||
-			strings.HasSuffix(lowerName, ".png") ||
-			strings.HasSuffix(lowerName, ".webp") ||
-			strings.HasSuffix(lowerName, ".gif") {
-			rc, err := file.Open()
-			if err != nil {
-				return nil, err
-			}
-			content, err := io.ReadAll(rc)
-			rc.Close()
-			if err != nil {
-				return nil, err
-			}
-			photos[file.Name] = content
-		}
-	}
-	return photos, nil
 }
