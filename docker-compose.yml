@@ -7,6 +7,8 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - douyin-api
+    volumes:
+      - ./config/config.yaml:/app/config.yaml
     restart: unless-stopped
 
   douyin-api:
