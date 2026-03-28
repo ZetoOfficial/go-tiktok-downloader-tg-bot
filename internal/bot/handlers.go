@@ -48,8 +48,8 @@ func (h *Handler) HandleUpdate(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 		return
 	}
 
-	// Проверка наличия ссылки TikTok
-	if sanitizer.IsTikTokLink(text) {
+	// Проверка наличия ссылки TikTok или YouTube Shorts
+	if sanitizer.IsTikTokLink(text) || sanitizer.IsYouTubeShortsLink(text) {
 		// 👀 реакция "смотрю"
 		h.setReaction(bot, chatID, messageID, "👀")
 

@@ -7,27 +7,39 @@ import (
 	"log"
 
 	"github.com/ZetoOfficial/go-tiktok-downloader-tg-bot/internal/models"
+	"github.com/ZetoOfficial/go-tiktok-downloader-tg-bot/internal/sanitizer"
 )
 
 const maxVideoSize = 50 * 1024 * 1024 // 50 MB
 
-type DouyinClient interface {
+type MediaDownloader interface {
 	Download(ctx context.Context, link string, options ...models.DownloadOption) (*models.DownloadResponse, error)
 }
 
 type DownloadService struct {
-	douyinClient DouyinClient
+	douyinClient  MediaDownloader
+	youtubeClient MediaDownloader
 }
 
-func NewDownloadService(douyinClient DouyinClient) *DownloadService {
+func NewDownloadService(douyinClient, youtubeClient MediaDownloader) *DownloadService {
 	return &DownloadService{
-		douyinClient: douyinClient,
+		douyinClient:  douyinClient,
+		youtubeClient: youtubeClient,
 	}
 }
 
 func (d *DownloadService) DownloadMedia(ctx context.Context, link string) (*models.Media, error) {
 	log.Print("Downloading media...")
-	resp, err := d.douyinClient.Download(ctx, link)
+
+	var resp *models.DownloadResponse
+	var err error
+
+	switch {
+	case sanitizer.IsYouTubeShortsLink(link):
+		resp, err = d.youtubeClient.Download(ctx, link)
+	default:
+		resp, err = d.douyinClient.Download(ctx, link)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("download media: %w", err)
 	}

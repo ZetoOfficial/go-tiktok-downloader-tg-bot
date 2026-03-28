@@ -41,9 +41,11 @@ func main() {
 		log.Fatalf("Ошибка инициализации DouyinClient: %v", err)
 	}
 
+	youtubeClient := clients.NewYouTubeClient()
+
 	sender := api.NewTelegramAdapter(botAPI)
 
-	downloaderService := service.NewDownloadService(douyinClient)
+	downloaderService := service.NewDownloadService(douyinClient, youtubeClient)
 	messageService := service.NewMessageService(sender)
 
 	handler := bot.NewHandler(downloaderService, messageService)
