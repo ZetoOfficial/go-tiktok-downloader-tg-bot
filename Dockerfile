@@ -13,6 +13,11 @@ FROM alpine:latest
 
 WORKDIR /app
 
+# yt-dlp (через pip — свежая версия, важно чтобы не отставать от TikTok/YouTube)
+# + ffmpeg для склейки видео/аудио дорожек (например, YouTube Shorts).
+RUN apk add --no-cache python3 py3-pip ffmpeg ca-certificates \
+    && pip install --no-cache-dir --break-system-packages yt-dlp
+
 COPY --from=builder /app/bot .
 
 COPY config/config.yaml ./config.yaml

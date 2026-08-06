@@ -7,8 +7,7 @@ import (
 )
 
 type Config struct {
-	BotToken  string `yaml:"bot_token"`
-	DouyinAPI string `yaml:"douyin_api"`
+	BotToken string `yaml:"bot_token"`
 }
 
 func LoadConfig(path string) (*Config, error) {

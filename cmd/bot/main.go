@@ -36,16 +36,11 @@ func main() {
 
 	updates := botAPI.GetUpdatesChan(u)
 
-	douyinClient, err := clients.NewDouyinClient(cfg)
-	if err != nil {
-		log.Fatalf("Ошибка инициализации DouyinClient: %v", err)
-	}
-
-	youtubeClient := clients.NewYouTubeClient()
+	ytdlpClient := clients.NewYtDlpClient()
 
 	sender := api.NewTelegramAdapter(botAPI)
 
-	downloaderService := service.NewDownloadService(douyinClient, youtubeClient)
+	downloaderService := service.NewDownloadService(ytdlpClient)
 	messageService := service.NewMessageService(sender)
 
 	handler := bot.NewHandler(downloaderService, messageService)
