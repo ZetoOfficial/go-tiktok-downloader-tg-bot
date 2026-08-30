@@ -9,14 +9,14 @@ COPY . .
 
 RUN go build -o bot ./cmd/bot
 
-FROM alpine:latest
+FROM denoland/deno:alpine
 
 WORKDIR /app
 
-# yt-dlp (через pip — свежая версия, важно чтобы не отставать от TikTok/YouTube)
-# + ffmpeg для склейки видео/аудио дорожек (например, YouTube Shorts).
+# yt-dlp с EJS-компонентами и Deno для обработки JavaScript-проверок YouTube.
+# ffmpeg склеивает раздельные видео/аудио дорожки (например, YouTube Shorts).
 RUN apk add --no-cache python3 py3-pip ffmpeg ca-certificates \
-    && pip install --no-cache-dir --break-system-packages yt-dlp
+    && pip install --no-cache-dir --break-system-packages "yt-dlp[default]"
 
 COPY --from=builder /app/bot .
 

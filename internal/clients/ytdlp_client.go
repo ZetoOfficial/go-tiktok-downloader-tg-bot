@@ -56,8 +56,8 @@ func (c *YtDlpClient) Download(ctx context.Context, link string, _ ...models.Dow
 
 	outputTemplate := filepath.Join(tmpDir, "%(autonumber)03d-%(title).50s.%(ext)s")
 	args := []string{
-		"--no-warnings",
 		"--no-progress",
+		"--js-runtimes", "deno",
 		"--max-filesize", maxFileSizeArg,
 		"-S", "res:720,ext:mp4:m4a,filesize:50M",
 		"--merge-output-format", "mp4",
@@ -76,6 +76,9 @@ func (c *YtDlpClient) Download(ctx context.Context, link string, _ ...models.Dow
 			return nil, fmt.Errorf("yt-dlp timed out after %s", ytdlpTimeout)
 		}
 		return nil, fmt.Errorf("yt-dlp failed: %w: %s", err, tail(stderr.String(), 500))
+	}
+	if warnings := strings.TrimSpace(stderr.String()); warnings != "" {
+		log.Printf("yt-dlp warnings: %s", warnings)
 	}
 
 	return collectMedia(tmpDir)
