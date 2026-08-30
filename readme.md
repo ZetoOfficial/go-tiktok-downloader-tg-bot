@@ -1,7 +1,7 @@
 # 🕺 Telegram TikTok/Douyin Downloader Bot
 
 Телеграм-бот для скачивания видео с TikTok и Douyin (抖音), без водяных знаков.  
-Использует внешний API: [`evil0ctal/douyin_tiktok_download_api`](https://github.com/Evil0ctal/Douyin_TikTok_Download_API)
+Скачивание выполняется напрямую с помощью `yt-dlp`.
 
 ---
 
@@ -10,7 +10,8 @@
 - Go (Golang)
 - Telegram Bot API (`tgbotapi`)
 - Docker / Docker Compose
-- Douyin API (через внешний Docker-образ)
+- `yt-dlp`
+- FFmpeg
 
 ---
 
@@ -22,7 +23,6 @@
 
 ```yaml
 bot_token: "TOKEN"
-douyin_api_url: "http://douyin-api:80"
 ```
 
 ---
@@ -33,10 +33,7 @@ douyin_api_url: "http://douyin-api:80"
 docker-compose up --build
 ```
 
-Это поднимет:
-
-- Телеграм-бот (`tiktok-bot`)
-- Внешний Douyin API (`douyin-api`)
+Это поднимет Телеграм-бот (`tiktok-bot`).
 
 ---
 
