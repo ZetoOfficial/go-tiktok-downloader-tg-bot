@@ -1,6 +1,6 @@
 # 🕺 Telegram Media Downloader Bot
 
-Телеграм-бот для скачивания видео с TikTok и YouTube Shorts.  
+Телеграм-бот для скачивания видео с TikTok, YouTube Shorts и публичных Instagram Reels.
 Скачивание выполняется напрямую с помощью `yt-dlp`.
 
 ---
@@ -39,11 +39,13 @@ docker-compose up --build
 
 ### ✅ Примеры команд для пользователя
 
-Отправьте боту ссылку на видео с TikTok — он вернёт видеофайл без водяных знаков.
+Отправьте боту ссылку на TikTok, YouTube Shorts или публичный Instagram Reel — он вернёт видеофайл.
 
-Пример:
+Примеры:
 ```
 https://vt.tiktok.com/ZSMoXTxvS/
+https://www.youtube.com/shorts/VIDEO_ID
+https://www.instagram.com/reel/REEL_ID/
 ```
 
 ---

@@ -48,14 +48,20 @@ func (h *Handler) HandleUpdate(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 		return
 	}
 
-	// Проверка наличия ссылки TikTok или YouTube Shorts
-	if sanitizer.IsTikTokLink(text) || sanitizer.IsYouTubeShortsLink(text) {
+	isInstagramReel := sanitizer.IsInstagramReelLink(text)
+
+	// Проверка наличия поддерживаемой ссылки
+	if sanitizer.IsTikTokLink(text) || sanitizer.IsYouTubeShortsLink(text) || isInstagramReel {
 		// 👀 реакция "смотрю"
 		h.setReaction(bot, chatID, messageID, "👀")
 
 		media, err := h.downloaderService.DownloadMedia(ctx, text)
 		if err != nil {
-			h.replyWithError(bot, chatID, messageID, "Ошибка при загрузке контента.", err)
+			userMessage := "Ошибка при загрузке контента."
+			if isInstagramReel {
+				userMessage = "Не удалось скачать Reel. Поддерживаются только публичные Reels: Instagram мог потребовать вход, ограничить доступ или ролик недоступен."
+			}
+			h.replyWithError(bot, chatID, messageID, userMessage, err)
 			// 👎 реакция "плаки-плаки"
 			h.setReaction(bot, chatID, messageID, "👎")
 			return

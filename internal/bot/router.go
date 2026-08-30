@@ -22,9 +22,9 @@ func handleCommand(botAPI *tgbotapi.BotAPI, message *tgbotapi.Message) {
 	switch message.Command() {
 	case "start":
 		startText := "👋 *Hi! I’m your video downloader.*\n" +
-			"I can help you download videos from *TikTok* and *YouTube Shorts* — fast, free, and without watermarks.\n\n" +
+			"I can help you download videos from *TikTok*, *YouTube Shorts*, and public *Instagram Reels* — fast and free.\n\n" +
 			"🎬 *How to use me:*\n" +
-			"1. Send me a TikTok or YouTube Shorts link\n" +
+			"1. Send me a TikTok, YouTube Shorts, or Instagram Reel link\n" +
 			"2. I’ll fetch and send it back to you!\n\n" +
 			"✅ Just send a link to try it out!\n\n" +
 			"👥 *Want to use me in a group?*\n" +
@@ -40,7 +40,8 @@ func handleCommand(botAPI *tgbotapi.BotAPI, message *tgbotapi.Message) {
 
 	case "help":
 		helpText := "ℹ️ *Bot Commands:*\n\n" +
-			"- Send a TikTok or YouTube Shorts link — I’ll download it for you.\n" +
+			"- Send a TikTok, YouTube Shorts, or Instagram Reel link — I’ll download it for you.\n" +
+			"- Only public Instagram Reels are supported.\n" +
 			"- Videos are sent *without watermarks* when possible.\n\n" +
 			"⚠️ Note: Telegram limits video uploads to ~50MB for bots.\n\n" +
 			"👥 *Using the bot in a group?*\n" +
