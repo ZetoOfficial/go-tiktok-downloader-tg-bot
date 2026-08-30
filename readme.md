@@ -1,6 +1,6 @@
-# 🕺 Telegram TikTok/Douyin Downloader Bot
+# 🕺 Telegram Media Downloader Bot
 
-Телеграм-бот для скачивания видео с TikTok и Douyin (抖音), без водяных знаков.  
+Телеграм-бот для скачивания видео с TikTok и YouTube Shorts.  
 Скачивание выполняется напрямую с помощью `yt-dlp`.
 
 ---
