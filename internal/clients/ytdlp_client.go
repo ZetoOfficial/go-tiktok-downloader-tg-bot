@@ -49,7 +49,7 @@ func (c *YtDlpClient) Download(ctx context.Context, link string, _ ...models.Dow
 	if err != nil {
 		return nil, fmt.Errorf("create temp dir: %w", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	runCtx, cancel := context.WithTimeout(ctx, ytdlpTimeout)
 	defer cancel()

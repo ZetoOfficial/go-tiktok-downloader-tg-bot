@@ -20,6 +20,5 @@ RUN apk add --no-cache python3 py3-pip ffmpeg ca-certificates \
 
 COPY --from=builder /app/bot .
 
-COPY config/config.yaml ./config.yaml
-
+# config.yaml монтируется через docker-compose (volumes), в образ не попадает.
 CMD ["./bot", "--config=./config.yaml"]

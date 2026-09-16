@@ -1,0 +1,8 @@
+name: tiktok-bot
+
+services:
+  tiktok-bot:
+    image: ghcr.io/zetoofficial/go-tiktok-downloader-tg-bot:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
