@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -21,6 +22,10 @@ const ytdlpTimeout = 3 * time.Minute
 // maxFileSizeArg задаёт лимит размера скачиваемого файла для yt-dlp.
 // Telegram не принимает от ботов файлы больше ~50 МБ.
 const maxFileSizeArg = "50M"
+
+// Сначала исходный звук, затем русская дорожка, если YouTube не пометил оригинал.
+// В конце остаётся обычный выбор yt-dlp для роликов без подходящей дорожки.
+const youtubeFormat = "bv+ba[format_note*=original]/b[format_note*=original]/bv+ba[language^=ru]/b[language^=ru]/bv*+ba/b"
 
 var videoExtensions = map[string]bool{
 	".mp4": true, ".webm": true, ".mkv": true, ".mov": true,
@@ -63,8 +68,12 @@ func (c *YtDlpClient) Download(ctx context.Context, link string, _ ...models.Dow
 		"--merge-output-format", "mp4",
 		"--socket-timeout", "30",
 		"-o", outputTemplate,
-		"--", link,
 	}
+	if isYouTubeLink(link) {
+		// YouTube может пометить AI-дубляж как дорожку по умолчанию.
+		args = append(args, "-f", youtubeFormat)
+	}
+	args = append(args, "--", link)
 
 	var stderr bytes.Buffer
 	cmd := exec.CommandContext(runCtx, c.binary, args...)
@@ -82,6 +91,21 @@ func (c *YtDlpClient) Download(ctx context.Context, link string, _ ...models.Dow
 	}
 
 	return collectMedia(tmpDir)
+}
+
+func isYouTubeLink(link string) bool {
+	u, err := url.Parse(link)
+	if err != nil {
+		return false
+	}
+	switch strings.ToLower(u.Hostname()) {
+	case "youtube.com", "www.youtube.com", "m.youtube.com":
+		return strings.HasPrefix(u.Path, "/shorts/")
+	case "youtu.be":
+		return true
+	default:
+		return false
+	}
 }
 
 // collectMedia читает скачанные yt-dlp файлы из dir и раскладывает их в

@@ -37,3 +37,25 @@ func TestExistingLinkSanitizers(t *testing.T) {
 		t.Error("YouTube Shorts link must remain supported")
 	}
 }
+
+func TestSourceLink(t *testing.T) {
+	tests := []struct {
+		text, name, link string
+		ok               bool
+	}{
+		{"Смотри https://www.youtube.com/shorts/abc123?si=xyz!", "YouTube", "https://www.youtube.com/shorts/abc123?si=xyz", true},
+		{"https://youtu.be/abc123", "YouTube", "https://youtu.be/abc123", true},
+		{"https://www.instagram.com/reel/abc123/", "Instagram", "https://www.instagram.com/reel/abc123/", true},
+		{"https://vt.tiktok.com/abc123/", "TikTok", "https://vt.tiktok.com/abc123/", true},
+		{"tiktok.com/@user/video/123", "TikTok", "https://tiktok.com/@user/video/123", true},
+		{"без ссылки", "", "", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.text, func(t *testing.T) {
+			name, link, ok := SourceLink(tt.text)
+			if name != tt.name || link != tt.link || ok != tt.ok {
+				t.Fatalf("SourceLink(%q) = (%q, %q, %t), want (%q, %q, %t)", tt.text, name, link, ok, tt.name, tt.link, tt.ok)
+			}
+		})
+	}
+}

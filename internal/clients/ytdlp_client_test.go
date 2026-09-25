@@ -95,3 +95,20 @@ func TestCollectMedia_EmptyDirReturnsError(t *testing.T) {
 		t.Fatal("expected error for empty dir, got nil")
 	}
 }
+
+func TestIsYouTubeLink(t *testing.T) {
+	tests := []struct {
+		link string
+		want bool
+	}{
+		{"https://www.youtube.com/shorts/abc123", true},
+		{"https://youtu.be/abc123", true},
+		{"https://www.youtube.com/watch?v=abc123", false},
+		{"https://tiktok.com/@user/video/youtube.com/shorts/abc123", false},
+	}
+	for _, tt := range tests {
+		if got := isYouTubeLink(tt.link); got != tt.want {
+			t.Errorf("isYouTubeLink(%q) = %t, want %t", tt.link, got, tt.want)
+		}
+	}
+}

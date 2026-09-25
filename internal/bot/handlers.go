@@ -48,14 +48,15 @@ func (h *Handler) HandleUpdate(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 		return
 	}
 
-	isInstagramReel := sanitizer.IsInstagramReelLink(text)
+	sourceName, sourceURL, supported := sanitizer.SourceLink(text)
+	isInstagramReel := sourceName == "Instagram"
 
 	// Проверка наличия поддерживаемой ссылки
-	if sanitizer.IsTikTokLink(text) || sanitizer.IsYouTubeShortsLink(text) || isInstagramReel {
+	if supported {
 		// 👀 реакция "смотрю"
 		h.setReaction(bot, chatID, messageID, "👀")
 
-		media, err := h.downloaderService.DownloadMedia(ctx, text)
+		media, err := h.downloaderService.DownloadMedia(ctx, sourceURL)
 		if err != nil {
 			userMessage := "Ошибка при загрузке контента."
 			if isInstagramReel {
@@ -67,7 +68,7 @@ func (h *Handler) HandleUpdate(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 			return
 		}
 
-		if err := h.messageService.SendMedia(ctx, chatID, media, models.WithReplyTo(messageID)); err != nil {
+		if err := h.messageService.SendMedia(ctx, chatID, media, models.WithReplyTo(messageID), models.WithSource(sourceName, sourceURL)); err != nil {
 			h.replyWithError(bot, chatID, messageID, "Ошибка при отправке контента.", err)
 			// 👎 реакция "плаки-плаки"
 			h.setReaction(bot, chatID, messageID, "👎")

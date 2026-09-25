@@ -29,19 +29,32 @@ func (ta *TelegramAdapter) SendMessage(chatID int64, text string, opts ...models
 
 func (ta *TelegramAdapter) SendVideoFile(chatID int64, fileName string, data []byte, opts ...models.SendOption) error {
 	options := ta.applyOptions(opts)
+	videoMsg := newVideoConfig(chatID, fileName, data, options)
+	_, err := ta.Bot.Send(videoMsg)
+	return err
+}
 
+func newVideoConfig(chatID int64, fileName string, data []byte, options models.SendOptions) tgbotapi.VideoConfig {
 	videoFile := tgbotapi.FileBytes{
 		Name:  fileName,
 		Bytes: data,
 	}
 	videoMsg := tgbotapi.NewVideo(chatID, videoFile)
+	if options.SourceName != "" && options.SourceURL != "" {
+		videoMsg.Caption = options.SourceName
+		videoMsg.CaptionEntities = []tgbotapi.MessageEntity{{
+			Type:   "text_link",
+			Offset: 0,
+			Length: len(options.SourceName),
+			URL:    options.SourceURL,
+		}}
+	}
 
 	if options.ReplyToMessageID > 0 {
 		videoMsg.ReplyToMessageID = options.ReplyToMessageID
 	}
 
-	_, err := ta.Bot.Send(videoMsg)
-	return err
+	return videoMsg
 }
 
 func (ta *TelegramAdapter) SendMediaGroup(chatID int64, media []models.MediaInput, opts ...models.SendOption) error {
