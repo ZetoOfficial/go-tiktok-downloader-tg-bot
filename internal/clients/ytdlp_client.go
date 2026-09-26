@@ -35,21 +35,37 @@ var imageExtensions = map[string]bool{
 	".jpg": true, ".jpeg": true, ".png": true, ".webp": true, ".gif": true,
 }
 
-// YtDlpClient скачивает видео и фото-слайдшоу (TikTok, YouTube Shorts и др.),
-// вызывая бинарь yt-dlp. Реализует интерфейс service.MediaDownloader.
+// YtDlpClient скачивает медиа через yt-dlp, а публикации Instagram сначала
+// пробует загрузить через gallery-dl. Реализует service.MediaDownloader.
 type YtDlpClient struct {
-	binary string
+	binary        string
+	galleryBinary string
 }
 
 func NewYtDlpClient() *YtDlpClient {
-	return &YtDlpClient{binary: "yt-dlp"}
+	return &YtDlpClient{binary: "yt-dlp", galleryBinary: "gallery-dl"}
 }
 
 func (c *YtDlpClient) Download(ctx context.Context, link string, _ ...models.DownloadOption) (*models.DownloadResponse, error) {
 	if link == "" {
 		return nil, fmt.Errorf("empty link")
 	}
+	if isInstagramPostLink(link) {
+		resp, galleryErr := c.downloadInstagramPost(ctx, link)
+		if galleryErr == nil {
+			return resp, nil
+		}
+		log.Printf("gallery-dl failed for Instagram post: %v; trying yt-dlp", galleryErr)
+		resp, err := c.downloadWithYtDlp(ctx, link)
+		if err != nil {
+			return nil, fmt.Errorf("gallery-dl: %v; yt-dlp: %w", galleryErr, err)
+		}
+		return resp, nil
+	}
+	return c.downloadWithYtDlp(ctx, link)
+}
 
+func (c *YtDlpClient) downloadWithYtDlp(ctx context.Context, link string) (*models.DownloadResponse, error) {
 	tmpDir, err := os.MkdirTemp("", "ytdlp-*")
 	if err != nil {
 		return nil, fmt.Errorf("create temp dir: %w", err)

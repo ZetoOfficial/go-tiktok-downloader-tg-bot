@@ -30,6 +30,14 @@ func (d *DownloadService) DownloadMedia(ctx context.Context, link string) (*mode
 	if err != nil {
 		return nil, fmt.Errorf("download media: %w", err)
 	}
+	if len(resp.Items) > 0 {
+		for _, item := range resp.Items {
+			if item.Type == "video" && len(item.Data) > maxVideoSize {
+				return nil, errors.New("video is too large")
+			}
+		}
+		return &models.Media{Items: resp.Items}, nil
+	}
 
 	if len(resp.Data) > 0 {
 		if len(resp.Data) > maxVideoSize {

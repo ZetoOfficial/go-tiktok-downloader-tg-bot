@@ -11,6 +11,7 @@ type SendOptions struct {
 	ReplyToMessageID int
 	SourceName       string
 	SourceURL        string
+	Caption          string
 }
 
 func WithSource(name, url string) SendOption {
@@ -23,5 +24,11 @@ func WithSource(name, url string) SendOption {
 func WithReplyTo(messageID int) SendOption {
 	return func(cfg *SendOptions) {
 		cfg.ReplyToMessageID = messageID
+	}
+}
+
+func WithCaption(caption string) SendOption {
+	return func(cfg *SendOptions) {
+		cfg.Caption = caption
 	}
 }

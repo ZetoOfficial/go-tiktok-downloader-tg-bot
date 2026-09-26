@@ -16,7 +16,7 @@ WORKDIR /app
 # yt-dlp с EJS-компонентами и Deno для обработки JavaScript-проверок YouTube.
 # ffmpeg склеивает раздельные видео/аудио дорожки (например, YouTube Shorts).
 RUN apk add --no-cache python3 py3-pip ffmpeg ca-certificates \
-    && pip install --no-cache-dir --break-system-packages "yt-dlp[default]"
+    && pip install --no-cache-dir --break-system-packages "yt-dlp[default]" gallery-dl
 
 COPY --from=builder /app/bot .
 

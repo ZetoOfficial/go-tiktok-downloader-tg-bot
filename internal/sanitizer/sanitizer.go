@@ -9,6 +9,7 @@ var (
 	tikTokPattern        = regexp.MustCompile(`(https?://)?(www\.|m\.|vt\.|vm\.)?(tiktok\.com|douyin\.com)/\S+`)
 	youTubeShortsPattern = regexp.MustCompile(`(https?://)?(www\.|m\.)?(youtube\.com/shorts/|youtu\.be/)\S+`)
 	instagramReelPattern = regexp.MustCompile(`(?i)https?://(?:www\.|m\.)?instagram\.com/reel/[a-z0-9_-]+/?(?:\?[^\s]*)?(?:\s|$)`)
+	instagramPostPattern = regexp.MustCompile(`(?i)https?://(?:www\.|m\.)?instagram\.com/p/[a-z0-9_-]+/?(?:\?[^\s]*)?(?:\s|$)`)
 )
 
 func IsTikTokLink(text string) bool {
@@ -32,6 +33,7 @@ func SourceLink(text string) (name, link string, ok bool) {
 		{"TikTok", tikTokPattern},
 		{"YouTube", youTubeShortsPattern},
 		{"Instagram", instagramReelPattern},
+		{"Instagram", instagramPostPattern},
 	} {
 		link = strings.TrimRight(strings.TrimSpace(source.pattern.FindString(text)), ".,!?)")
 		if link == "" {

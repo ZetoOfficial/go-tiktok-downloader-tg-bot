@@ -49,7 +49,7 @@ func (h *Handler) HandleUpdate(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 	}
 
 	sourceName, sourceURL, supported := sanitizer.SourceLink(text)
-	isInstagramReel := sourceName == "Instagram"
+	isInstagram := sourceName == "Instagram"
 
 	// Проверка наличия поддерживаемой ссылки
 	if supported {
@@ -59,8 +59,8 @@ func (h *Handler) HandleUpdate(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 		media, err := h.downloaderService.DownloadMedia(ctx, sourceURL)
 		if err != nil {
 			userMessage := "Ошибка при загрузке контента."
-			if isInstagramReel {
-				userMessage = "Не удалось скачать Reel. Поддерживаются только публичные Reels: Instagram мог потребовать вход, ограничить доступ или ролик недоступен."
+			if isInstagram {
+				userMessage = "Не удалось скачать публикацию Instagram. Поддерживаются только публичные посты и Reels: Instagram мог потребовать вход, ограничить доступ или публикация недоступна."
 			}
 			h.replyWithError(bot, chatID, messageID, userMessage, err)
 			// 👎 реакция "плаки-плаки"
