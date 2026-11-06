@@ -9,6 +9,7 @@ func TestIsInstagramReelLink(t *testing.T) {
 		want bool
 	}{
 		{name: "www reel", text: "https://www.instagram.com/reel/C1Ab_2-x/", want: true},
+		{name: "www reels", text: "https://www.instagram.com/reels/DfWiXQIIkKl/", want: true},
 		{name: "mobile reel", text: "https://m.instagram.com/reel/C1Ab_2-x/", want: true},
 		{name: "query parameters", text: "https://instagram.com/reel/C1Ab_2-x?igsh=YWJjZA==", want: true},
 		{name: "link in message", text: "Watch this https://www.instagram.com/reel/C1Ab_2-x/ now", want: true},
@@ -46,6 +47,9 @@ func TestSourceLink(t *testing.T) {
 		{"Смотри https://www.youtube.com/shorts/abc123?si=xyz!", "YouTube", "https://www.youtube.com/shorts/abc123?si=xyz", true},
 		{"https://youtu.be/abc123", "YouTube", "https://youtu.be/abc123", true},
 		{"https://www.instagram.com/reel/abc123/", "Instagram", "https://www.instagram.com/reel/abc123/", true},
+		{"https://www.instagram.com/reels/DfWiXQIIkKl/", "Instagram", "https://www.instagram.com/reels/DfWiXQIIkKl/", true},
+		{"Смотри https://www.instagram.com/reels/DfUBtv4IL93/?igsh=abc!", "Instagram", "https://www.instagram.com/reels/DfUBtv4IL93/?igsh=abc", true},
+		{"https://www.instagram.com/reels/", "", "", false},
 		{"https://instagram.com/p/DdsrIIZMD7i/", "Instagram", "https://instagram.com/p/DdsrIIZMD7i/", true},
 		{"Смотри https://m.instagram.com/p/DdsrIIZMD7i/?igsh=abc!", "Instagram", "https://m.instagram.com/p/DdsrIIZMD7i/?igsh=abc", true},
 		{"https://www.instagram.com/stories/example/123/", "", "", false},

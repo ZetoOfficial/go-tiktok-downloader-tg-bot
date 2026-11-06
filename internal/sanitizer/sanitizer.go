@@ -8,7 +8,7 @@ import (
 var (
 	tikTokPattern        = regexp.MustCompile(`(https?://)?(www\.|m\.|vt\.|vm\.)?(tiktok\.com|douyin\.com)/\S+`)
 	youTubeShortsPattern = regexp.MustCompile(`(https?://)?(www\.|m\.)?(youtube\.com/shorts/|youtu\.be/)\S+`)
-	instagramReelPattern = regexp.MustCompile(`(?i)https?://(?:www\.|m\.)?instagram\.com/reel/[a-z0-9_-]+/?(?:\?[^\s]*)?(?:\s|$)`)
+	instagramReelPattern = regexp.MustCompile(`(?i)https?://(?:www\.|m\.)?instagram\.com/reels?/[a-z0-9_-]+/?(?:\?[^\s]*)?(?:\s|$)`)
 	instagramPostPattern = regexp.MustCompile(`(?i)https?://(?:www\.|m\.)?instagram\.com/p/[a-z0-9_-]+/?(?:\?[^\s]*)?(?:\s|$)`)
 )
 

@@ -47,6 +47,7 @@ docker-compose up --build
 https://vt.tiktok.com/ZSMoXTxvS/
 https://www.youtube.com/shorts/VIDEO_ID
 https://www.instagram.com/reel/REEL_ID/
+https://www.instagram.com/reels/REEL_ID/
 https://instagram.com/p/DdsrIIZMD7i/
 ```
 
