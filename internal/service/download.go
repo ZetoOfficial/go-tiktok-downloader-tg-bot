@@ -46,6 +46,7 @@ func (d *DownloadService) DownloadMedia(ctx context.Context, link string) (*mode
 		return &models.Media{
 			VideoData: resp.Data,
 			VideoName: resp.FileName,
+			VideoMeta: resp.Video,
 		}, nil
 	}
 

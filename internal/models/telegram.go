@@ -12,6 +12,7 @@ type SendOptions struct {
 	SourceName       string
 	SourceURL        string
 	Caption          string
+	Video            VideoMeta
 }
 
 func WithSource(name, url string) SendOption {
@@ -30,5 +31,11 @@ func WithReplyTo(messageID int) SendOption {
 func WithCaption(caption string) SendOption {
 	return func(cfg *SendOptions) {
 		cfg.Caption = caption
+	}
+}
+
+func WithVideoMeta(meta VideoMeta) SendOption {
+	return func(cfg *SendOptions) {
+		cfg.Video = meta
 	}
 }

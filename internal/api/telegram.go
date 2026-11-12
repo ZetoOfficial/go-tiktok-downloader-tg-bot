@@ -29,8 +29,15 @@ func (ta *TelegramAdapter) SendMessage(chatID int64, text string, opts ...models
 
 func (ta *TelegramAdapter) SendVideoFile(chatID int64, fileName string, data []byte, opts ...models.SendOption) error {
 	options := ta.applyOptions(opts)
-	videoMsg := newVideoConfig(chatID, fileName, data, options)
-	_, err := ta.Bot.Send(videoMsg)
+	params, err := newVideoParams(chatID, options)
+	if err != nil {
+		return err
+	}
+	files := []tgbotapi.RequestFile{{
+		Name: "video",
+		Data: tgbotapi.FileBytes{Name: fileName, Bytes: data},
+	}}
+	_, err = ta.Bot.UploadFiles("sendVideo", params, files)
 	return err
 }
 
@@ -40,31 +47,40 @@ func (ta *TelegramAdapter) SendPhotoFile(chatID int64, fileName string, data []b
 	if options.ReplyToMessageID > 0 {
 		photoMsg.ReplyToMessageID = options.ReplyToMessageID
 	}
-	if options.SourceName != "" && options.SourceURL != "" {
-		photoMsg.Caption = options.SourceName
-		photoMsg.CaptionEntities = []tgbotapi.MessageEntity{{
-			Type: "text_link", Offset: 0, Length: len(options.SourceName), URL: options.SourceURL,
-		}}
-	}
-	if options.Caption != "" {
-		if photoMsg.Caption != "" {
-			photoMsg.Caption += "\n"
-		}
-		photoMsg.Caption += options.Caption
-	}
+	photoMsg.Caption, photoMsg.CaptionEntities = buildCaption(options)
 	_, err := ta.Bot.Send(photoMsg)
 	return err
 }
 
-func newVideoConfig(chatID int64, fileName string, data []byte, options models.SendOptions) tgbotapi.VideoConfig {
-	videoFile := tgbotapi.FileBytes{
-		Name:  fileName,
-		Bytes: data,
+// newVideoParams собирает параметры sendVideo вручную: VideoConfig из
+// telegram-bot-api v5 не умеет передавать width и height, а без них
+// Telegram показывает ролик квадратным.
+func newVideoParams(chatID int64, options models.SendOptions) (tgbotapi.Params, error) {
+	params := tgbotapi.Params{}
+	params.AddNonZero64("chat_id", chatID)
+	params.AddNonZero("reply_to_message_id", options.ReplyToMessageID)
+
+	caption, entities := buildCaption(options)
+	params.AddNonEmpty("caption", caption)
+	if len(entities) > 0 {
+		if err := params.AddInterface("caption_entities", entities); err != nil {
+			return nil, err
+		}
 	}
-	videoMsg := tgbotapi.NewVideo(chatID, videoFile)
+
+	params.AddNonZero("width", options.Video.Width)
+	params.AddNonZero("height", options.Video.Height)
+	params.AddNonZero("duration", options.Video.Duration)
+	params.AddBool("supports_streaming", true)
+	return params, nil
+}
+
+func buildCaption(options models.SendOptions) (string, []tgbotapi.MessageEntity) {
+	var caption string
+	var entities []tgbotapi.MessageEntity
 	if options.SourceName != "" && options.SourceURL != "" {
-		videoMsg.Caption = options.SourceName
-		videoMsg.CaptionEntities = []tgbotapi.MessageEntity{{
+		caption = options.SourceName
+		entities = []tgbotapi.MessageEntity{{
 			Type:   "text_link",
 			Offset: 0,
 			Length: len(options.SourceName),
@@ -72,17 +88,12 @@ func newVideoConfig(chatID int64, fileName string, data []byte, options models.S
 		}}
 	}
 	if options.Caption != "" {
-		if videoMsg.Caption != "" {
-			videoMsg.Caption += "\n"
+		if caption != "" {
+			caption += "\n"
 		}
-		videoMsg.Caption += options.Caption
+		caption += options.Caption
 	}
-
-	if options.ReplyToMessageID > 0 {
-		videoMsg.ReplyToMessageID = options.ReplyToMessageID
-	}
-
-	return videoMsg
+	return caption, entities
 }
 
 func (ta *TelegramAdapter) SendMediaGroup(chatID int64, media []models.MediaInput, opts ...models.SendOption) error {
@@ -119,6 +130,10 @@ func (ta *TelegramAdapter) SendMediaGroup(chatID int64, media []models.MediaInpu
 			inputMedia := tgbotapi.NewInputMediaVideo(file)
 			inputMedia.Caption = caption
 			inputMedia.CaptionEntities = entities
+			inputMedia.Width = m.Video.Width
+			inputMedia.Height = m.Video.Height
+			inputMedia.Duration = m.Video.Duration
+			inputMedia.SupportsStreaming = true
 			mediaGroup = append(mediaGroup, inputMedia)
 		default:
 			return errors.New("unsupported media type: " + m.Type)

@@ -40,10 +40,11 @@ var imageExtensions = map[string]bool{
 type YtDlpClient struct {
 	binary        string
 	galleryBinary string
+	probeBinary   string
 }
 
 func NewYtDlpClient() *YtDlpClient {
-	return &YtDlpClient{binary: "yt-dlp", galleryBinary: "gallery-dl"}
+	return &YtDlpClient{binary: "yt-dlp", galleryBinary: "gallery-dl", probeBinary: "ffprobe"}
 }
 
 func (c *YtDlpClient) Download(ctx context.Context, link string, _ ...models.DownloadOption) (*models.DownloadResponse, error) {
@@ -106,7 +107,12 @@ func (c *YtDlpClient) downloadWithYtDlp(ctx context.Context, link string) (*mode
 		log.Printf("yt-dlp warnings: %s", warnings)
 	}
 
-	return collectMedia(tmpDir)
+	resp, err := collectMedia(tmpDir)
+	if err != nil {
+		return nil, err
+	}
+	c.annotateVideos(ctx, tmpDir, resp)
+	return resp, nil
 }
 
 func isYouTubeLink(link string) bool {

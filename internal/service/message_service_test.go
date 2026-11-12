@@ -56,3 +56,40 @@ func TestSendMediaMixedCarouselWithRemainder(t *testing.T) {
 		t.Fatalf("videos = %v", sender.videos)
 	}
 }
+
+type metaSender struct {
+	recordingSender
+	metas []models.VideoMeta
+}
+
+func (s *metaSender) SendVideoFile(_ int64, name string, _ []byte, opts ...models.SendOption) error {
+	var cfg models.SendOptions
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+	s.videos = append(s.videos, name)
+	s.metas = append(s.metas, cfg.Video)
+	return nil
+}
+
+func TestSendMediaPassesVideoMeta(t *testing.T) {
+	meta := models.VideoMeta{Width: 720, Height: 1280, Duration: 9}
+
+	sender := &metaSender{}
+	media := &models.Media{VideoName: "clip.mp4", VideoData: []byte("v"), VideoMeta: meta}
+	if err := NewMessageService(sender).SendMedia(context.Background(), 1, media); err != nil {
+		t.Fatal(err)
+	}
+	if len(sender.metas) != 1 || sender.metas[0] != meta {
+		t.Fatalf("single video metas = %v", sender.metas)
+	}
+
+	sender = &metaSender{}
+	media = &models.Media{Items: []models.MediaInput{{Type: "video", FileName: "001.mp4", Data: []byte("v"), Video: meta}}}
+	if err := NewMessageService(sender).SendMedia(context.Background(), 1, media); err != nil {
+		t.Fatal(err)
+	}
+	if len(sender.metas) != 1 || sender.metas[0] != meta {
+		t.Fatalf("item video metas = %v", sender.metas)
+	}
+}

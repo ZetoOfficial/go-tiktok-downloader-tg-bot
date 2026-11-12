@@ -28,7 +28,8 @@ func (ms *MessageService) SendMedia(ctx context.Context, chatID int64, media *mo
 		return ms.sendItems(ctx, chatID, media.Items, opts...)
 	}
 	if len(media.VideoData) > 0 {
-		return ms.sender.SendVideoFile(chatID, media.VideoName, media.VideoData, opts...)
+		videoOpts := append(append([]models.SendOption(nil), opts...), models.WithVideoMeta(media.VideoMeta))
+		return ms.sender.SendVideoFile(chatID, media.VideoName, media.VideoData, videoOpts...)
 	}
 
 	// Отправка изображений, если они есть
@@ -76,7 +77,8 @@ func (ms *MessageService) sendItems(ctx context.Context, chatID int64, items []m
 					return err
 				}
 			case "video":
-				if err := ms.sender.SendVideoFile(chatID, item.FileName, item.Data, singleOpts...); err != nil {
+				videoOpts := append(singleOpts, models.WithVideoMeta(item.Video))
+				if err := ms.sender.SendVideoFile(chatID, item.FileName, item.Data, videoOpts...); err != nil {
 					return err
 				}
 			default:

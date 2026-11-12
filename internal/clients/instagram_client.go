@@ -51,7 +51,12 @@ func (c *YtDlpClient) downloadInstagramPost(ctx context.Context, link string) (*
 		}
 		return nil, fmt.Errorf("gallery-dl failed: %w: %s", err, tail(stderr.String(), 500))
 	}
-	return collectGalleryMedia(tmpDir)
+	resp, err := collectGalleryMedia(tmpDir)
+	if err != nil {
+		return nil, err
+	}
+	c.annotateVideos(ctx, tmpDir, resp)
+	return resp, nil
 }
 
 func collectGalleryMedia(dir string) (*models.DownloadResponse, error) {

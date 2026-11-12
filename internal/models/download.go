@@ -7,6 +7,7 @@ package models
 type DownloadResponse struct {
 	FileName string
 	Data     []byte            // содержимое файла (например, видео)
+	Video    VideoMeta         // параметры видео из Data
 	Photos   map[string][]byte // распакованные фотографии (слайдшоу)
 	Items    []MediaInput      // упорядоченные фото и видео публикации
 }
